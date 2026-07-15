@@ -45,8 +45,9 @@ jobs:
         cd ..
         git clone --branch 17.0 --depth 1 https://github.com/odoo/odoo.git odoo-17
         cd odoo-17
-        # Fix gevent version to a build that works with Python 3.10+
-        sed -i 's/gevent>=.*,<.*/gevent>=22.10.2/' requirements.txt
+        # Remove gevent to avoid compilation; install precompiled wheel
+        sed -i '/gevent/d' requirements.txt
+        pip install gevent==22.10.2 --only-binary :all:
         pip install -r requirements.txt
 
     - name: Create Odoo config file
