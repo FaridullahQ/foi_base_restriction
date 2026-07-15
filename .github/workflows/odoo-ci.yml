@@ -1,0 +1,82 @@
+name: Odoo CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout your module
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libxml2-dev libxslt1-dev libpq-dev \
+          build-essential git python3-dev \
+          libsasl2-dev libldap2-dev libssl-dev \
+          wkhtmltopdf
+
+    - name: Clone Odoo 17 core
+      run: |
+        cd ..
+        git clone --branch 17.0 --depth 1 https://github.com/odoo/odoo.git odoo-17
+        cd odoo-17
+        pip install -r requirements.txt
+
+    - name: Install your module's dependencies (if any)
+      run: |
+        cd ../odoo-17
+        # Add any extra pip packages your module needs here
+        # Example: pip install openpyxl
+
+    - name: Create Odoo config file
+      run: |
+        cd ../odoo-17
+        echo "[options]
+        addons_path = ../odoo-17/addons, ${{ github.workspace }}
+        db_host = localhost
+        db_port = 5432
+        db_user = odoo
+        db_password = odoo
+        " > odoo.conf
+
+    - name: Run your tests
+      env:
+        PGHOST: localhost
+        PGUSER: odoo
+        PGPASSWORD: odoo
+      run: |
+        cd ../odoo-17
+        python odoo-bin -c odoo.conf -d testdb -i foi_base_restriction --test-enable --stop-after-init --without-demo=all --log-level=info
+
+    - name: Run Linter (optional, but recommended)
+      run: |
+        pip install pylint-odoo flake8
+        pylint-odoo ${{ github.workspace }}
+        flake8 ${{ github.workspace }}
+      continue-on-error: true  # This allows the test step to show failures separately
