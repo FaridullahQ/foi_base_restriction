@@ -45,6 +45,8 @@ jobs:
         cd ..
         git clone --branch 17.0 --depth 1 https://github.com/odoo/odoo.git odoo-17
         cd odoo-17
+        # Fix gevent version to a build that works with Python 3.10+
+        sed -i 's/gevent>=.*,<.*/gevent>=22.10.2/' requirements.txt
         pip install -r requirements.txt
 
     - name: Create Odoo config file
@@ -65,7 +67,7 @@ jobs:
         PGPASSWORD: odoo
       run: |
         cd ../odoo-17
-        python odoo-bin -c odoo.conf -d testdb -i foi_base_restriction --test-enable --stop-after-init --without-demo=all --log-level=info
+        python odoo-bin -c odoo.conf -d testdb -i foi_base_restriction --test-enable --stop-after-init --without-demo=all --log-level=info --addons-path=../odoo-17/addons,${{ github.workspace }}
 
     - name: Upload module artifact
       uses: actions/upload-artifact@v4
