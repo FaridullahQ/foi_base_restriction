@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_foi_restriction_policy_manager,foi.restriction.policy.manager,model_foi_restriction_policy,group_restriction_manager,1,1,1,1
+access_foi_restriction_policy_domain_line_manager,foi.restriction.policy.domain.line.manager,model_foi_restriction_policy_domain_line,group_restriction_manager,1,1,1,1

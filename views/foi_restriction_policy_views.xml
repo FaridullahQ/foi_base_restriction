@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_foi_restriction_policy_search" model="ir.ui.view">
+        <field name="name">foi.restriction.policy.search</field>
+        <field name="model">foi.restriction.policy</field>
+        <field name="arch" type="xml">
+            <search string="Restriction Policies">
+                <field name="name"/>
+                <field name="group_ids"/>
+                <field name="user_ids"/>
+                <filter string="Active" name="filter_active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Has Domain Rules" name="filter_has_domain_rules"
+                        domain="[('domain_line_ids', '!=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Group" name="group_by_group_ids" context="{'group_by': 'group_ids'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_foi_restriction_policy_list" model="ir.ui.view">
+        <field name="name">foi.restriction.policy.list</field>
+        <field name="model">foi.restriction.policy</field>
+        <field name="arch" type="xml">
+            <tree string="Restriction Policies">
+                <field name="name"/>
+                <field name="group_ids" widget="many2many_tags" optional="show"/>
+                <field name="user_ids" widget="many2many_tags" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_foi_restriction_policy_form" model="ir.ui.view">
+        <field name="name">foi.restriction.policy.form</field>
+        <field name="model">foi.restriction.policy</field>
+        <field name="arch" type="xml">
+            <form string="Restriction Policy">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Sales Reps Restrictions"/></h1>
+                    </div>
+                    <group>
+                        <group string="Applies To">
+                            <field name="group_ids" widget="many2many_tags"
+                                   placeholder="All users (leave empty for everyone)"/>
+                            <field name="user_ids" widget="many2many_tags"
+                                   placeholder="No named users"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Menus" name="menus">
+                            <div class="alert alert-info" role="alert">
+                                Selected menu items are <strong>hidden</strong> for this audience.
+                                Leave empty to leave every menu visible.
+                            </div>
+                            <field name="menu_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Products" name="products">
+                            <div class="alert alert-info" role="alert">
+                                If any products/variants are selected, <strong>only those are allowed</strong>.
+                                Leave empty to allow all.
+                            </div>
+                            <group>
+                                <field name="product_tmpl_ids" widget="many2many_tags"/>
+                                <field name="product_product_ids" widget="many2many_tags"
+                                       string="Specific Variants (optional)"/>
+                            </group>
+                        </page>
+                        <page string="Product Categories" name="product_categories">
+                            <div class="alert alert-info" role="alert">
+                                If any categories are selected, <strong>only those (and everything
+                                underneath them) are allowed</strong>. Leave empty to allow all.
+                            </div>
+                            <field name="product_categ_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Vendors" name="vendors">
+                            <div class="alert alert-info" role="alert">
+                                If any vendors are selected, <strong>only those are allowed</strong>.
+                                Leave empty to allow all vendors. Non-vendor contacts are unaffected.
+                            </div>
+                            <field name="vendor_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Customers" name="customers">
+                            <div class="alert alert-info" role="alert">
+                                If any customers are selected, <strong>only those are allowed</strong>.
+                                Leave empty to allow all customers. Non-customer contacts are unaffected.
+                            </div>
+                            <field name="customer_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Journals" name="journals">
+                            <div class="alert alert-info" role="alert">
+                                If any journals are selected, <strong>only those are allowed</strong>.
+                                Leave empty to allow all.
+                            </div>
+                            <field name="journal_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Warehouses" name="warehouses">
+                            <div class="alert alert-info" role="alert">
+                                If any warehouses are selected, <strong>only those are allowed</strong>.
+                                Leave empty to allow all.
+                            </div>
+                            <field name="warehouse_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Locations" name="locations">
+                            <div class="alert alert-info" role="alert">
+                                If any locations are selected, <strong>only those (and everything
+                                underneath them) are allowed</strong>. Leave empty to allow all.
+                            </div>
+                            <field name="location_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Domain Rules (Advanced)" name="domain_rules">
+                            <div class="alert alert-warning" role="alert">
+                                Advanced: for anything the fixed tabs above don't cover.
+                                Pick any model directly -- no setup needed.
+                            </div>
+                            <field name="domain_line_ids">
+                                <tree editable="bottom">
+                                    <field name="target_id"/>
+                                    <field name="mode"/>
+                                    <field name="domain" placeholder="[('user_id', '=', uid)]"/>
+                                </tree>
+                            </field>
+                            <div class="text-muted mt-2">
+                                Tip: use the same dynamic variables as a native Record Rule --
+                                <code>uid</code>, <code>user</code>, <code>time</code>, <code>datetime</code>,
+                                <code>relativedelta</code>, <code>context_today()</code>. e.g.
+                                <code>[('user_id', '=', uid)]</code> for "only my own records".
+                            </div>
+                        </page>
+                        <page string="Technical" name="technical" groups="base.group_no_one">
+                            <field name="compiled_audience_group_id" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_foi_restriction_policy" model="ir.actions.act_window">
+        <field name="name">Restriction Policies</field>
+        <field name="res_model">foi.restriction.policy</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_foi_restriction_policy_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smart_action">
+                Create a policy: pick who it applies to, then go through the
+                tabs to decide what they can see.
+            </p>
+            <p>
+                Remember to use "Recompile Restriction Rules" after changes
+                so the native security rules pick them up.
+            </p>
+        </field>
+    </record>
+
+</odoo>

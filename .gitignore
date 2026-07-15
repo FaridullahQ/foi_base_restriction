@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+.run/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local Odoo config (if you accidentally put one here)
+*.conf

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="module_category_foi_restriction" model="ir.module.category">
+            <field name="name">Restriction Framework</field>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="group_restriction_manager" model="res.groups">
+            <field name="name">Restriction Manager</field>
+            <field name="category_id" ref="module_category_foi_restriction"/>
+            <field name="comment">
+                Can create, edit and compile restriction policies. This group is
+                deliberately separate from the groups a policy can target, so
+                that the restriction engine can never be used to modify its own
+                administrators' access (privilege-escalation guard).
+            </field>
+        </record>
+
+    </data>
+</odoo>

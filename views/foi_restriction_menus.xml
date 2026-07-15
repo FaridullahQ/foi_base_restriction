@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_foi_restriction_recompile" model="ir.actions.server">
+        <field name="name">Recompile Restriction Rules</field>
+        <field name="model_id" ref="model_foi_restriction_policy"/>
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(6, 0, [ref('group_restriction_manager')])]"/>
+        <field name="code">
+env['foi.restriction.rule.compiler'].recompile_all()
+action = {
+    'type': 'ir.actions.client',
+    'tag': 'display_notification',
+    'params': {
+        'title': 'Restriction rules recompiled',
+        'message': 'All active policies have been compiled into native security rules.',
+        'type': 'success',
+        'sticky': False,
+    },
+}
+        </field>
+    </record>
+
+    <!-- Placed as a top-level Settings tab, ordered before "Technical"
+         (base.menu_custom). If your instance orders this differently once
+         installed, adjust via Settings > Technical > User Interface > Menu
+         Items > "Restriction" > Sequence; no code change needed. -->
+    <menuitem id="menu_foi_restriction_root"
+              name="Restriction"
+              parent="base.menu_administration"
+              sequence="5"
+              groups="foi_base_restriction.group_restriction_manager"/>
+
+    <menuitem id="menu_foi_restriction_policy"
+              name="Policy"
+              parent="menu_foi_restriction_root"
+              action="action_foi_restriction_policy"
+              sequence="10"/>
+
+    <menuitem id="menu_foi_restriction_recompile"
+              name="Recompile Restriction Rules"
+              parent="menu_foi_restriction_root"
+              action="action_foi_restriction_recompile"
+              sequence="20"/>
+
+</odoo>
