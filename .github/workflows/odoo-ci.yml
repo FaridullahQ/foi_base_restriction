@@ -1,4 +1,4 @@
-name: Odoo CI
+name: Odoo CI/CD
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:15
@@ -48,12 +47,6 @@ jobs:
         cd odoo-17
         pip install -r requirements.txt
 
-    - name: Install your module's dependencies (if any)
-      run: |
-        cd ../odoo-17
-        # Add any extra pip packages your module needs here
-        # Example: pip install openpyxl
-
     - name: Create Odoo config file
       run: |
         cd ../odoo-17
@@ -74,9 +67,49 @@ jobs:
         cd ../odoo-17
         python odoo-bin -c odoo.conf -d testdb -i foi_base_restriction --test-enable --stop-after-init --without-demo=all --log-level=info
 
-    - name: Run Linter (optional, but recommended)
-      run: |
-        pip install pylint-odoo flake8
-        pylint-odoo ${{ github.workspace }}
-        flake8 ${{ github.workspace }}
-      continue-on-error: true  # This allows the test step to show failures separately
+    - name: Upload module artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: foi_base_restriction
+        path: ${{ github.workspace }}
+        retention-days: 1
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Download module artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: foi_base_restriction
+        path: ./foi_base_restriction
+
+    - name: Deploy module to on-premises server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "./foi_base_restriction/*"
+        target: ${{ secrets.SERVER_MODULE_PATH }}
+        strip_components: 1
+
+    - name: Update Odoo module and restart service
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # Set correct ownership
+          sudo chown -R testfssd:testfssd /home/testfssd/odoo17/custom_addons/foi_base_restriction
+          
+          # Update the module using the virtual environment's Python
+          cd /home/testfssd/odoo17
+          /home/testfssd/odoo17/venv/bin/python3 /home/testfssd/odoo17/odoo-bin -c /home/testfssd/odoo17/odoo.conf -u foi_base_restriction --stop-after-init
+          
+          # Restart the Odoo service
+          sudo systemctl restart odoo17
+          
+          echo "✅ Deployment completed successfully!"
